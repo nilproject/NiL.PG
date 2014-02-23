@@ -3,14 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NiL.PG;
 
 namespace NiL.PG.Test
 {
     class Program
     {
-        #region Parser define
-           NiL.PG.Parser parser = new Parser(
-@"
+        static Parser parser;
+
+        /*
+         * char '*' after field definition allow repeat this field.
+         * In this case this field in result will be have index in name.
+         * For sample: *func(func)* give fields "func0", "func1"...
+         * 
+         */
+
+        static void Main(string[] args)
+        {
+            parser = new Parser(@"
 rule name
     {a..z}|_({a..z, 0..9, _})*    
 
@@ -23,13 +33,20 @@ rule operator
 rule decincoperators
     (++)|(--)
 
+fragment expression
+
+fragment callarg
+    *exp(expression) ,
+    *exp(expression)
+
 fragment expression    
     (*brexp(expression)) *op(operator) *exp(expression)
     (*brexp(expression))
     *op(operator) *exp(expression)
     *first(name, num) *op(operator) *two(expression)
+    *proc(name) ( )
+    *proc(name) ( *arg(callarg)* )
     *value(name, num) *op(decincoperators)
-    *op(decincoperators) *value(name, num) 
     *value(name, num)
 
 fragment vardeclenum
@@ -52,7 +69,7 @@ fragment forpost
 fragment codeline
     { *line(codeline)* }
     *exp(expression) ;
-    return *rexp(expression) ;
+    return *exp(expression) ;
     *vardecl(vardecl) ;
     if (*condition(expression)) *exp(codeline) else *elseexp(codeline)
     if (*condition(expression)) *exp(codeline)
@@ -71,11 +88,22 @@ fragment func
 fragment root
     *func(func)*
 ");
-#endregion
 
-        static void Main(string[] args)
-        {
+            var tree = parser.CreateTree(@"
+int sqrt(int x)
+{
+    return x * x;
+}
 
+int main(int a) {
+    sqrt(a + 2);
+ }");
+            for (var i = 0; i < tree.NextNodes.Count; i++)
+            {
+                var func = tree.NextNodes[i];
+                Console.WriteLine(func["type"].Value + " " + func["name"].Value);
+            }
+            return;
         }
     }
 }

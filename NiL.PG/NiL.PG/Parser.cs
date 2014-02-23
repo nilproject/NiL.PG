@@ -11,7 +11,7 @@ namespace NiL.PG
             public List<TreeNode> NextNodes { get; private set; }
             public string Name { get; set; }
             public string Value { get; set; }
-            
+
             public TreeNode()
             {
                 NextNodes = new List<TreeNode>();
@@ -155,7 +155,7 @@ namespace NiL.PG
                 for (int i = 0; (i < Variants.Count) && (res == null); i++)
                 {
                     res = Variants[i].Parse(text, pos, out tlen);
-                    if (tlen > parsedLen) 
+                    if (tlen > parsedLen)
                         parsedLen = tlen;
                 }
                 if (res != null)
@@ -241,7 +241,7 @@ namespace NiL.PG
             public override TreeNode Parse(string text, int pos, out int parsedLen)
             {
                 parsedLen = 0;
-                if (pos + Value.Length >= text.Length)
+                if (pos + Value.Length > text.Length)
                     return null;
                 var t = text.Substring(pos, Value.Length);
                 if (t == Value)
@@ -347,7 +347,7 @@ namespace NiL.PG
                             }
                             catch
                             {
-                                throw new ArgumentException("Invalid rule define " + rule.Name + " (" + line + ", " + chari + ")"); 
+                                throw new ArgumentException("Invalid rule define " + rule.Name + " (" + line + ", " + chari + ")");
                             }
                             break;
                         }
@@ -358,10 +358,17 @@ namespace NiL.PG
                                 throw new ArgumentException("Invalid fragment name " + tok + " (" + line + ", " + chari + ")");
                             if (rules.ContainsKey(tok))
                                 throw new ArgumentException("Try to redefine rule " + tok + " (" + line + ", " + chari + ")");
-                            if (fragments.ContainsKey(tok))
-                                throw new ArgumentException("Try to redefine fragment " + tok + " (" + line + ", " + chari + ")");
-                            Fragment frag = new Fragment(tok);
-                            fragments.Add(tok, frag);
+                            Fragment frag;
+                            if (fragments.TryGetValue(tok, out frag))
+                            {
+                                if (frag.Variants.Count != 0)
+                                    throw new ArgumentException("Try to redefine fragment " + tok + " (" + line + ", " + chari + ")");
+                            }
+                            else
+                            {
+                                frag = new Fragment(tok);
+                                fragments.Add(tok, frag);
+                            }
                             List<string> code = new List<string>();
                             line++;
                             while ((line < acode.Length) && (acode[line].Trim() != ""))
@@ -455,12 +462,12 @@ namespace NiL.PG
                                                     throw new ArgumentException("Field define can't contain more than one fragment");
                                                 if ((ffrags.Count == 0) && (frules.Count == 0))
                                                 {
-                                                    throw new ArgumentException("Rule shall be declared"); 
+                                                    throw new ArgumentException("Rule shall be declared");
                                                 }
                                                 if (ffrags.Count != 0)
                                                 {
-                                                    variant.Elements.Add(new FragmentElement() 
-                                                    { 
+                                                    variant.Elements.Add(new FragmentElement()
+                                                    {
                                                         Repeated = Repeated,
                                                         Fragment = ffrags[0],
                                                         FieldName = fname
@@ -473,7 +480,7 @@ namespace NiL.PG
                                                         Repeated = Repeated,
                                                         Rules = frules,
                                                         FieldName = fname
-                                                    }); 
+                                                    });
                                                 }
                                                 break;
                                             }
