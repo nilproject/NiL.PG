@@ -297,7 +297,7 @@ namespace NiL.PG
         {
             Dictionary<string, Rule> rules = new Dictionary<string, Rule>();
             Dictionary<string, Fragment> fragments = new Dictionary<string, Fragment>();
-            string[] acode = pattern.Split(new string[] { "\r\n" }, StringSplitOptions.None);
+            string[] acode = pattern.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             int line = 0;
             int chari = 0;
             Func<bool> lineFeed = () =>

@@ -68,13 +68,13 @@ fragment forpost
 
 fragment codeline
     { *line(codeline)* }
-    *exp(expression) ;
-    return *exp(expression) ;
-    *vardecl(vardecl) ;
     if (*condition(expression)) *exp(codeline) else *elseexp(codeline)
     if (*condition(expression)) *exp(codeline)
     while (*condition(expression)) *exp(codeline)
     for (*init(forinit) ; *condition(expression) ; *post(forpost)* ) *exp(codeline)
+    return *exp(expression) ;
+    *vardecl(vardecl) ;
+    *exp(expression) ;
     ;
 
 fragment paramdefine
@@ -96,7 +96,7 @@ int sqrt(int x)
 }
 
 int main(int a) {
-    sqrt(a + 2);
+    sqrt(a + 2, b);
  }");
             for (var i = 0; i < tree.NextNodes.Count; i++)
             {
