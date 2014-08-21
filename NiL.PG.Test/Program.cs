@@ -9,8 +9,6 @@ namespace NiL.PG.Test
 {
     class Program
     {
-        static Parser parser;
-
         /*
          * char '*' after field definition allow repeat this field.
          * In this case this field in result will be have index in name.
@@ -18,9 +16,10 @@ namespace NiL.PG.Test
          * 
          */
 
-        static void Main(string[] args)
+        static void programmingLanguageTest()
         {
-            parser = new Parser(@"
+            // invalid syntax
+            var parser = new Parser(@"
 rule name
     {a..z}|_({a..z, 0..9, _})*    
 
@@ -89,7 +88,7 @@ fragment root
     *func(func)*
 ");
 
-            var tree = parser.CreateTree(@"
+            var tree = parser.Parse(@"
 int sqrt(int x)
 {
     return x * x;
@@ -104,6 +103,67 @@ int main(int a) {
                 Console.WriteLine(func["type"].Value + " " + func["name"].Value);
             }
             return;
+        }
+
+        static void htmlTest()
+        {
+            #region Invalid syntax
+            string html = @"<!DOCTYPE html>
+<html xmlns=""http://www.w3.org/1999/xhtml"">
+<head>
+<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8""/>
+    <title></title>
+</head>
+<body>
+    <header>Header</header>
+    Hello, world!
+    <div id=""test""></div>
+</body>
+</html>
+";
+            var parser = new Parser(@"
+
+rule name
+    ({ ..!, #.._, a.. })*
+
+rule anyWithoutCB
+    ({ ..=, ?.. })*
+
+rule anyWithoutOB
+    ({ ..;, =.. })*
+
+rule anyWithoutDQ
+    ({ ..;, =.. })*
+
+rule anyWithoutSQ
+    ({ .._, a.. })*
+
+fragment tag
+
+fragment attribute
+    *name(name) = "" *value(anyWithoutDQ) ""
+    *name(name) = ' *value(anyWithoutSQ) '
+
+fragment tagcontent
+    *node(tag)
+    *text(anyWithoutOB)
+
+fragment tag
+    <!-- *comment(anyWithoutCB) --!>
+    <*name(name) *attribute(attribute)* > *inner(tagcontent)* </ *cname(name) >
+
+fragment root
+    <! *doctype(anyWithoutCB) > *html(tag)
+    *html(tag)
+
+");
+            var tree = parser.Parse(html);
+            #endregion
+        }
+
+        static void Main(string[] args)
+        {
+            htmlTest();
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace NiL.PG
 {
@@ -52,7 +53,7 @@ namespace NiL.PG
         private class Rule
         {
             public string Name { get; set; }
-            public FiniteAutomaton Format { get; set; }
+            public Regex Format { get; set; }
 
             public override string ToString()
             {
@@ -199,9 +200,9 @@ namespace NiL.PG
                 string stext = text.Substring(pos);
                 for (int i = 0; i < Rules.Count; i++)
                 {
-                    string s = Rules[i].Format.MaxSatisfying(stext);
-                    if (s.Length > res.Value.Length)
-                        res.Value = s;
+                    var s = Rules[i].Format.Match(stext);
+                    if (s.Success && s.Index == 0)
+                        res.Value = s.Value;
                 }
                 parsedLen = 0;
                 if (res.Value == "")
@@ -343,11 +344,11 @@ namespace NiL.PG
                             chari = 0;
                             try
                             {
-                                rule.Format = new FiniteAutomaton(code);
+                                rule.Format = new Regex(code);
                             }
-                            catch
+                            catch(Exception e)
                             {
-                                throw new ArgumentException("Invalid rule define " + rule.Name + " (" + line + ", " + chari + ")");
+                                throw new ArgumentException("Invalid rule define " + rule.Name + " (" + line + ", " + chari + ")", e);
                             }
                             break;
                         }
@@ -504,7 +505,7 @@ namespace NiL.PG
             root = fragments["root"];
         }
 
-        public TreeNode CreateTree(string text)
+        public TreeNode Parse(string text)
         {
             int pl = 0;
             var t = root.Parse(text, 0, out pl);
