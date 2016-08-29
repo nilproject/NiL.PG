@@ -42,7 +42,7 @@ fragment expression
     (*brexp(expression)) *op(operator) *exp(expression)
     (*brexp(expression))
     *op(operator) *exp(expression)
-    *first(name, num) *op(operator) *two(expression)
+    *first(name, num) *op(operator) *second(expression)
     *proc(name) ( )
     *proc(name) ( *arg(callarg)* )
     *value(name, num) *op(decincoperators)
