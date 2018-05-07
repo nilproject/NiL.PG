@@ -12,7 +12,7 @@ namespace NiL.PG.Test
         /*
          * char '*' after field definition allow repeat this field.
          * In this case this field in result will be have index in name.
-         * For sample: *func(func)* give fields "func0", "func1"...
+         * For example: *func(func)* give fields "func0", "func1"...
          * 
          */
 
