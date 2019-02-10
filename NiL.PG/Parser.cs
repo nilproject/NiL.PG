@@ -5,286 +5,16 @@ using System.Text.RegularExpressions;
 
 namespace NiL.PG
 {
-    public class Parser
+    public partial class Parser
     {
-        public class TreeNode
-        {
-            public List<TreeNode> NextNodes { get; private set; }
-            public string Name { get; set; }
-            public string Value { get; set; }
-
-            public TreeNode()
-            {
-                NextNodes = new List<TreeNode>();
-                Name = "";
-                Value = "";
-            }
-
-            public TreeNode this[string name]
-            {
-                get
-                {
-                    string[] path = name.Split('\\');
-                    TreeNode c = this;
-                    for (int i = 0; i < path.Length; i++)
-                    {
-                        bool cont = false;
-                        foreach (var n in c.NextNodes)
-                            if (n.Name == path[i])
-                            {
-                                c = n;
-                                cont = true;
-                                break;
-                            }
-                        if (cont)
-                            continue;
-                        return null;
-                    }
-                    return c;
-                }
-            }
-
-            public override string ToString()
-            {
-                return Name;
-            }
-        }
-
-        private class Rule
-        {
-            public string Name { get; set; }
-            public Regex RegExp { get; set; }
-
-            public override string ToString()
-            {
-                return Name;
-            }
-        }
-
-        private class FragmentVariant
-        {
-            public string Name { get; set; }
-            public List<Element> Elements { get; private set; }
-
-            public FragmentVariant()
-            {
-                Elements = new List<Element>();
-                Name = "";
-            }
-
-            public FragmentVariant(string name)
-                : this()
-            {
-                Name = name;
-            }
-
-            public override string ToString()
-            {
-                string res = "";
-                for (int i = 0; i < Elements.Count; i++)
-                    res += Elements[i].ToString() + (i + 1 < Elements.Count ? " " : "");
-                return res;
-            }
-
-            public TreeNode Parse(string text, int pos, out int parsedLen)
-            {
-                TreeNode result = null;
-                int spos = pos;
-                int ruleIndex = 0;
-                int tokenLen = 0;
-                parsedLen = 0;
-                for (int i = 0; i < Elements.Count; i++)
-                {
-                    while ((text.Length > pos) && char.IsWhiteSpace(text[pos])) pos++;
-                    if (pos == text.Length)
-                    {
-                        if (Elements[i].Repeated)
-                            break;
-                        return null;
-                    }
-
-                    var t = Elements[i].Parse(text, pos, out tokenLen);
-                    if (tokenLen > 0) parsedLen += tokenLen;
-                    if (t == null)
-                    {
-                        if (!Elements[i].Repeated)
-                            return null;
-                    }
-                    else
-                    {
-                        if (Elements[i].Repeated)
-                        {
-                            i--;
-                            t.Name += ruleIndex.ToString();
-                            ruleIndex++;
-                        }
-                        else
-                            ruleIndex = 0;
-                    }
-
-                    if (t != null)
-                    {
-                        if (result == null)
-                            result = new TreeNode();
-
-                        result.NextNodes.Add(t);
-                        pos += t.Value.Length;
-                    }
-                }
-
-                if (result == null)
-                    result = new TreeNode();
-
-                result.Value = text.Substring(spos, pos - spos);
-                result.Name = Name;
-
-                return result;
-            }
-        }
-
-        private class Fragment
-        {
-            public string Name { get; set; }
-            public List<FragmentVariant> Variants { get; private set; }
-
-            public Fragment(string name)
-            {
-                this.Name = name;
-                Variants = new List<FragmentVariant>();
-            }
-
-            public override string ToString()
-            {
-                return Name;
-            }
-
-            public virtual TreeNode Parse(string text, int pos, out int parsedLen)
-            {
-                TreeNode res = null;
-                int tlen = 0;
-                parsedLen = 0;
-                for (int i = 0; (i < Variants.Count) && (res == null); i++)
-                {
-                    res = Variants[i].Parse(text, pos, out tlen);
-                    if (tlen > parsedLen)
-                        parsedLen = tlen;
-                }
-                if (res != null)
-                    res.Name = this.Name;
-                return res;
-            }
-        }
-
-        private abstract class Element
-        {
-            public bool Repeated { get; set; }
-            public string FieldName { get; set; }
-
-            public abstract TreeNode Parse(string text, int startpos, out int parsedLen);
-        }
-
-        private class RuleElement : Element
-        {
-            public List<Rule> Rules { get; set; }
-
-            public RuleElement()
-            {
-                Rules = new List<Rule>();
-            }
-
-            public override string ToString()
-            {
-                string r = "";
-                for (int i = 0; i < Rules.Count; i++)
-                {
-                    r += Rules[i].Name;
-                    if (i + 1 < Rules.Count)
-                        r += ", ";
-                }
-                return "*" + FieldName + "(" + r + ")";
-            }
-
-            public override TreeNode Parse(string text, int pos, out int parsedLen)
-            {
-                Match match = null;
-                for (int i = 0; i < Rules.Count; i++)
-                {
-                    match = Rules[i].RegExp.Match(text, pos);
-                    if (match.Index != pos || !match.Success)
-                    {
-                        match = null;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                if (match == null || !match.Success)
-                {
-                    parsedLen = 0;
-                    return null;
-                }
-
-                parsedLen = match.Length;
-                return new TreeNode
-                {
-                    Name = FieldName,
-                    Value = match.Value,
-                };
-            }
-        }
-
-        private class FragmentElement : Element
-        {
-            public Fragment Fragment { get; set; }
-
-            public override string ToString()
-            {
-                return "*" + FieldName + "(" + Fragment.ToString() + ")" + (Repeated ? "*" : "");
-            }
-
-            public override TreeNode Parse(string text, int pos, out int parsedLen)
-            {
-                var t = Fragment.Parse(text, pos, out parsedLen);
-                if (t != null)
-                    t.Name = FieldName;
-                return t;
-            }
-        }
-
-        private class EqualElement : Element
-        {
-            public string Value { get; set; }
-
-            public override string ToString()
-            {
-                return Value;
-            }
-
-            public override TreeNode Parse(string text, int pos, out int parsedLen)
-            {
-                parsedLen = 0;
-                if (pos + Value.Length > text.Length)
-                    return null;
-
-                var index = text.IndexOf(Value, pos, Value.Length);
-                if (index == pos)
-                {
-                    parsedLen = Value.Length;
-                    return new TreeNode() { Value = Value, Name = Value };
-                }
-
-                return null;
-            }
-        }
-
         private static string getToken(string text, ref int pos)
         {
             if (pos == text.Length)
                 return "";
+
             while (char.IsWhiteSpace(text[pos]))
                 pos++;
+
             if (char.IsLetterOrDigit(text[pos]))
             {
                 int s = pos;
@@ -302,6 +32,7 @@ namespace NiL.PG
                     }
                 return text.Substring(s, ++pos - s);
             }
+
             return text[pos++].ToString();
         }
 
@@ -319,11 +50,11 @@ namespace NiL.PG
 
         private Fragment root;
 
-        public Parser(string pattern)
+        public Parser(string definition)
         {
-            Dictionary<string, Rule> rules = new Dictionary<string, Rule>();
-            Dictionary<string, Fragment> fragments = new Dictionary<string, Fragment>();
-            string[] input = pattern.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            var rules = new Dictionary<string, Rule>();
+            var fragments = new Dictionary<string, Fragment>();
+            string[] input = definition.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             int line = 0;
             int position = 0;
             Func<bool> lineFeed = () =>
@@ -338,30 +69,31 @@ namespace NiL.PG
                 }
                 return false;
             };
+
             while (line < input.Length)
             {
                 while (lineFeed()) ;
                 if (line == input.Length)
                     break;
-                string tok = getToken(input[line], ref position);
-                switch (tok)
+                string token = getToken(input[line], ref position);
+                switch (token)
                 {
                     case "rule":
                     {
                         lineFeed();
-                        tok = getToken(input[line], ref position);
+                        token = getToken(input[line], ref position);
 
-                        if (!isValidName(tok))
-                            throw new ArgumentException("Invalid rule name " + tok + " (" + line + ", " + position + ")");
+                        if (!isValidName(token))
+                            throw new ArgumentException("Invalid rule name " + token + " (" + line + ", " + position + ")");
 
-                        if (rules.ContainsKey(tok))
-                            throw new ArgumentException("Try to redefine rule " + tok + " (" + line + ", " + position + ")");
+                        if (rules.ContainsKey(token))
+                            throw new ArgumentException("Try to redefine rule " + token + " (" + line + ", " + position + ")");
 
-                        if (fragments.ContainsKey(tok))
-                            throw new ArgumentException("Try to redefine fragment " + tok + " (" + line + ", " + position + ")");
+                        if (fragments.ContainsKey(token))
+                            throw new ArgumentException("Try to redefine fragment " + token + " (" + line + ", " + position + ")");
 
                         Rule rule = new Rule();
-                        rule.Name = tok;
+                        rule.Name = token;
                         rules.Add(rule.Name, rule);
                         line++;
                         string code = "";
@@ -385,24 +117,24 @@ namespace NiL.PG
                     }
                     case "fragment":
                     {
-                        tok = getToken(input[line], ref position);
+                        token = getToken(input[line], ref position);
 
-                        if (!isValidName(tok))
-                            throw new ArgumentException("Invalid fragment name " + tok + " (" + line + ", " + position + ")");
+                        if (!isValidName(token))
+                            throw new ArgumentException("Invalid fragment name " + token + " (" + line + ", " + position + ")");
 
-                        if (rules.ContainsKey(tok))
-                            throw new ArgumentException("Try to redefine rule " + tok + " (" + line + ", " + position + ")");
+                        if (rules.ContainsKey(token))
+                            throw new ArgumentException("Try to redefine rule " + token + " (" + line + ", " + position + ")");
 
-                        Fragment frag;
-                        if (fragments.TryGetValue(tok, out frag))
+                        Fragment fragment;
+                        if (fragments.TryGetValue(token, out fragment))
                         {
-                            if (frag.Variants.Count != 0)
-                                throw new ArgumentException("Try to redefine fragment " + tok + " (" + line + ", " + position + ")");
+                            if (fragment.Variants.Count != 0)
+                                throw new ArgumentException("Try to redefine fragment " + token + " (" + line + ", " + position + ")");
                         }
                         else
                         {
-                            frag = new Fragment(tok);
-                            fragments.Add(tok, frag);
+                            fragment = new Fragment(token);
+                            fragments.Add(token, fragment);
                         }
 
                         List<string> code = new List<string>();
@@ -416,51 +148,56 @@ namespace NiL.PG
                         position = 0;
                         for (int i = 0; i < code.Count; i++)
                         {
-                            var variant = new FragmentVariant(tok + i.ToString());
-                            frag.Variants.Add(variant);
-                            string trimcode = code[i].Trim();
-                            for (int j = 0; j < trimcode.Length;)
+                            var variant = new FragmentVariant(token, i);
+                            fragment.Variants.Add(variant);
+                            var trimcode = code[i].Trim();
+                            var prevPosition = 0;
+                            var fragmentPosition = 0;
+                            while (fragmentPosition < trimcode.Length)
                             {
-                                string t = getToken(trimcode, ref j);
+                                prevPosition = fragmentPosition;
+                                var t = getToken(trimcode, ref fragmentPosition);
                                 switch (t)
                                 {
                                     case "\\":
                                     {
-                                        t = getToken(trimcode, ref j);
+                                        t = getToken(trimcode, ref fragmentPosition);
                                         goto default;
                                     }
+
                                     case "*":
                                     {
-                                        string fname = getToken(trimcode, ref j);
+                                        string fname = getToken(trimcode, ref fragmentPosition);
                                         if (!isValidName(fname))
                                             throw new ArgumentException("Invalid field name " + fname + " (" + (line - input.Length + i) + ", " + position + ")");
-                                        List<Rule> frules = new List<Rule>();
+
+                                        List<Rule> paramsRules = new List<Rule>();
                                         List<Fragment> ffrags = new List<Fragment>();
                                         bool work = true;
                                         bool mrule = false;
                                         bool Repeated = false;
                                         while (work)
                                         {
-                                            switch (trimcode[j])
+                                            switch (trimcode[fragmentPosition])
                                             {
                                                 case '*':
                                                 {
                                                     Repeated = true;
-                                                    j++;
+                                                    fragmentPosition++;
                                                     break;
                                                 }
                                                 case ' ':
                                                 {
                                                     work = mrule;
-                                                    j++;
+                                                    fragmentPosition++;
                                                     break;
                                                 }
                                                 case ',':
                                                 {
                                                     if (mrule)
                                                     {
-                                                        while (char.IsWhiteSpace(trimcode[++j])) ;
-                                                        j--;
+                                                        while (char.IsWhiteSpace(trimcode[++fragmentPosition])) ;
+                                                        fragmentPosition--;
                                                         goto case '(';
                                                     }
                                                     else
@@ -469,17 +206,17 @@ namespace NiL.PG
                                                 case '(':
                                                 {
                                                     string rulname = "";
-                                                    j++;
-                                                    while ((trimcode[j] != ')') && (trimcode[j] != ','))
-                                                        rulname += trimcode[j++];
+                                                    fragmentPosition++;
+                                                    while ((trimcode[fragmentPosition] != ')') && (trimcode[fragmentPosition] != ','))
+                                                        rulname += trimcode[fragmentPosition++];
                                                     if (!isValidName(rulname) || !(rules.ContainsKey(rulname) || fragments.ContainsKey(rulname)))
                                                         throw new ArgumentException("Invalid element define \"" + rulname + "\"");
                                                     if (rules.ContainsKey(rulname))
-                                                        frules.Add(rules[rulname]);
+                                                        paramsRules.Add(rules[rulname]);
                                                     if (fragments.ContainsKey(rulname))
                                                         ffrags.Add(fragments[rulname]);
-                                                    mrule = trimcode[j] == ',';
-                                                    if (!mrule) j++;
+                                                    mrule = trimcode[fragmentPosition] == ',';
+                                                    if (!mrule) fragmentPosition++;
                                                     break;
                                                 }
                                                 default:
@@ -488,11 +225,11 @@ namespace NiL.PG
                                                     break;
                                                 }
                                             }
-                                            if (trimcode.Length <= j)
+                                            if (trimcode.Length <= fragmentPosition)
                                                 work = false;
                                         }
 
-                                        if ((frules.Count != 0) && (ffrags.Count != 0))
+                                        if ((paramsRules.Count != 0) && (ffrags.Count != 0))
                                         {
                                             throw new ArgumentException("Field define can't contains rules and fragment together");
                                         }
@@ -500,7 +237,7 @@ namespace NiL.PG
                                         if (ffrags.Count > 1)
                                             throw new ArgumentException("Field define can't contain more than one fragment");
 
-                                        if ((ffrags.Count == 0) && (frules.Count == 0))
+                                        if ((ffrags.Count == 0) && (paramsRules.Count == 0))
                                         {
                                             throw new ArgumentException("Rule shall be declared");
                                         }
@@ -516,19 +253,31 @@ namespace NiL.PG
                                         }
                                         else
                                         {
-                                            variant.Elements.Add(new RuleElement()
+                                            var ruleElement = new RuleElement()
                                             {
                                                 Repeated = Repeated,
-                                                Rules = frules,
                                                 FieldName = fname
-                                            });
+                                            };
+                                            ruleElement.Rules.AddRange(paramsRules);
+                                            variant.Elements.Add(ruleElement);
+
                                         }
                                         break;
                                     }
+
                                     default:
                                     {
-                                        EqualElement eq = new EqualElement() { Value = t };
-                                        variant.Elements.Add(eq);
+                                        if (prevPosition == fragmentPosition - t.Length
+                                            && variant.Elements.Count > 0
+                                            && variant.Elements[variant.Elements.Count - 1] is EqualElement equalElement)
+                                        {
+                                            equalElement.Value += t;
+                                        }
+                                        else
+                                        {
+                                            var eq = new EqualElement() { Value = t };
+                                            variant.Elements.Add(eq);
+                                        }
                                         break;
                                     }
                                 }
@@ -538,7 +287,7 @@ namespace NiL.PG
                     }
                     default:
                     {
-                        throw new ArgumentException("Invalid token " + tok + " (" + line + ", " + position + ")");
+                        throw new ArgumentException("Invalid token " + token + " (" + line + ", " + position + ")");
                     }
                 }
             }
@@ -549,7 +298,8 @@ namespace NiL.PG
         {
             int parsedLength = 0;
             var t = root.Parse(text, 0, out parsedLength);
-            if (t.Value != text)
+
+            if (t == null)
             {
                 var src = text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
                 int line = 0;
@@ -558,6 +308,7 @@ namespace NiL.PG
                 line++;
                 throw new ArgumentException("Syntax error at " + line + ":" + parsedLength);
             }
+
             return t;
         }
 

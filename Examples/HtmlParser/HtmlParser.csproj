@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C0FB5270-C454-4075-AF08-C642D46C3C63}</ProjectGuid>
+    <ProjectGuid>{E1487150-F3A1-4D38-96C4-92924C999221}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>CLikeParser</RootNamespace>
-    <AssemblyName>CLikeParser</AssemblyName>
+    <RootNamespace>HtmlParser</RootNamespace>
+    <AssemblyName>HtmlParser</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -50,11 +50,11 @@
     <None Include="SyntaxDescription.npg" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="code.c" />
+    <Content Include="page.html" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NiL.PG\NiL.PG.csproj">
-      <Project>{88A44F4C-8D65-4AF6-BA1C-F0DCE3FB418E}</Project>
+    <ProjectReference Include="..\..\NiL.PG\NiL.PG.csproj">
+      <Project>{7AF82FD4-3AE1-4017-BCC8-0C7E8B318806}</Project>
       <Name>NiL.PG</Name>
     </ProjectReference>
   </ItemGroup>

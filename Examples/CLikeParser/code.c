@@ -4,5 +4,5 @@
 }
 
 int main() {
-	sqrt(1, 2);
+	int value = sqrt(1, 2);
 }

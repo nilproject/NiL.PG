@@ -1,0 +1,33 @@
+﻿rule name
+    (([a-z]|_)[a-z0-9_-]*)
+
+rule anyWithoutCB
+    ([^>]+)
+
+rule anyWithoutOB
+    ([^<]+)
+
+rule anyWithoutDQ
+    ([^""]+)
+
+rule anyWithoutSQ
+    ([^']+)
+
+fragment block
+
+fragment attribute
+    *name(name) = " *value(anyWithoutDQ) "
+    *name(name) = ' *value(anyWithoutSQ) '
+
+fragment blockContent
+    *node(block)
+    *text(anyWithoutOB)
+
+fragment block
+    <!-- *comment(anyWithoutCB) --!>
+    <*tag(name) *attribute(attribute)* />
+    <*tag(name) *attribute(attribute)* > *inner(blockContent)* </ *closeTag(name) >
+
+fragment root
+    <! *doctype(anyWithoutCB) > *html(block)
+    *html(block)
