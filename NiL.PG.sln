@@ -1,9 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2010
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2026
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NiL.PG", "NiL.PG\NiL.PG.csproj", "{88A44F4C-8D65-4AF6-BA1C-F0DCE3FB418E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NiL.PG.Test", "NiL.PG.Test\NiL.PG.Test.csproj", "{1482FCCB-350C-4BC2-AE46-2CE3F6D4E48D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{7FF7733E-904F-4CDC-9660-9E6D7482B37A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLikeParser", "CLikeParser\CLikeParser.csproj", "{C0FB5270-C454-4075-AF08-C642D46C3C63}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,8 +45,26 @@ Global
 		{1482FCCB-350C-4BC2-AE46-2CE3F6D4E48D}.Release|x64.Build.0 = Release|x64
 		{1482FCCB-350C-4BC2-AE46-2CE3F6D4E48D}.Release|x86.ActiveCfg = Release|x86
 		{1482FCCB-350C-4BC2-AE46-2CE3F6D4E48D}.Release|x86.Build.0 = Release|x86
+		{C0FB5270-C454-4075-AF08-C642D46C3C63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0FB5270-C454-4075-AF08-C642D46C3C63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0FB5270-C454-4075-AF08-C642D46C3C63}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C0FB5270-C454-4075-AF08-C642D46C3C63}.Debug|x64.Build.0 = Debug|Any CPU
+		{C0FB5270-C454-4075-AF08-C642D46C3C63}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C0FB5270-C454-4075-AF08-C642D46C3C63}.Debug|x86.Build.0 = Debug|Any CPU
+		{C0FB5270-C454-4075-AF08-C642D46C3C63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0FB5270-C454-4075-AF08-C642D46C3C63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0FB5270-C454-4075-AF08-C642D46C3C63}.Release|x64.ActiveCfg = Release|Any CPU
+		{C0FB5270-C454-4075-AF08-C642D46C3C63}.Release|x64.Build.0 = Release|Any CPU
+		{C0FB5270-C454-4075-AF08-C642D46C3C63}.Release|x86.ActiveCfg = Release|Any CPU
+		{C0FB5270-C454-4075-AF08-C642D46C3C63}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C0FB5270-C454-4075-AF08-C642D46C3C63} = {7FF7733E-904F-4CDC-9660-9E6D7482B37A}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {55CEC6CC-7DC2-4059-9AA0-A75262D49284}
 	EndGlobalSection
 EndGlobal
