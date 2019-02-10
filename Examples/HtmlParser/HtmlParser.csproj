@@ -54,7 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\NiL.PG\NiL.PG.csproj">
-      <Project>{7AF82FD4-3AE1-4017-BCC8-0C7E8B318806}</Project>
+      <Project>{7af82fd4-3ae1-4017-bcc8-0c7e8b318806}</Project>
       <Name>NiL.PG</Name>
     </ProjectReference>
   </ItemGroup>

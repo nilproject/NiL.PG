@@ -13,6 +13,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>parser, parsing, generator</PackageTags>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageLicenseUrl>https://github.com/nilproject/NiL.PG/blob/master/LICENSE</PackageLicenseUrl>
   </PropertyGroup>
 
 </Project>
