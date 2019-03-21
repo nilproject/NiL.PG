@@ -67,7 +67,7 @@ namespace NiL.PG
                         if (result == null)
                             result = new FragmentTreeNode(FragmentName);
 
-                        result.Childs.Add(parsedFragment);
+                        result.Children.Add(parsedFragment);
                         pos += parsedFragment.Value.Length;
                     }
                 }
