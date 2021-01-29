@@ -15,21 +15,27 @@ namespace NiL.PG
             while (char.IsWhiteSpace(text[pos]))
                 pos++;
 
-            if (char.IsLetterOrDigit(text[pos]))
+            if (char.IsLetterOrDigit(text[pos]) || text[pos] == '_')
             {
                 int s = pos;
-                while ((s > 0) && char.IsLetterOrDigit(text[s - 1]))
+                while ((s > 0) && (char.IsLetterOrDigit(text[s - 1]) || text[s - 1] == '_'))
+                {
                     if (--s <= 0)
                     {
                         s = 0;
                         break;
                     }
-                while (char.IsLetterOrDigit(text[pos + 1]))
+                }
+
+                while (char.IsLetterOrDigit(text[pos + 1]) || text[pos + 1] == '_')
+                {
                     if (++pos >= text.Length - 1)
                     {
                         pos = text.Length - 1;
                         break;
                     }
+                }
+
                 return text.Substring(s, ++pos - s);
             }
 
@@ -40,11 +46,13 @@ namespace NiL.PG
         {
             if (!char.IsLetter(name[0]) && (name[0] != '_'))
                 return false;
+
             for (int i = 1; i < name.Length; i++)
             {
-                if (!char.IsLetterOrDigit(name[i]) && (name[0] != '_'))
+                if (!char.IsLetterOrDigit(name[i]) && (name[i] != '_'))
                     return false;
             }
+
             return true;
         }
 
@@ -239,7 +247,7 @@ namespace NiL.PG
 
                                         if ((ffrags.Count == 0) && (paramsRules.Count == 0))
                                         {
-                                            throw new ArgumentException("Rule shall be declared");
+                                            throw new ArgumentException("Rule must be declared");
                                         }
 
                                         if (ffrags.Count != 0)
