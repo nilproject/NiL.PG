@@ -4,5 +4,5 @@
 }
 
 int main() {
-	int value = sqrt(1, 2);
+	int value = sum(1, 2);
 }

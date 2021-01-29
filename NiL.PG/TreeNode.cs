@@ -28,14 +28,14 @@ namespace NiL.PG
 
         public class TreeNode
         {
-            public List<TreeNode> Childs { get; private set; }
+            public List<TreeNode> Children { get; private set; }
             public string Name { get; internal set; }
             public string Value { get; set; }
             public string FragmentName { get; internal set; }
 
             public TreeNode(string fragmentName)
             {
-                Childs = new List<TreeNode>();
+                Children = new List<TreeNode>();
                 Value = "";
                 Name = "";
                 FragmentName = fragmentName;
@@ -50,7 +50,7 @@ namespace NiL.PG
                     for (int i = 0; i < path.Length; i++)
                     {
                         bool cont = false;
-                        foreach (var n in c.Childs)
+                        foreach (var n in c.Children)
                         {
                             if (n.Name == path[i])
                             {

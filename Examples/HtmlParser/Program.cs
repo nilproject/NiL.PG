@@ -24,7 +24,7 @@ namespace HtmlParser
             if (tree["tag"]?.Value == "head")
                 return;
 
-            foreach (var node in tree.Childs)
+            foreach (var node in tree.Children)
             {
                 switch (node.FragmentName)
                 {

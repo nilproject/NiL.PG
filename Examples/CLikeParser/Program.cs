@@ -16,9 +16,9 @@ namespace CLikeParser
 
             var tree = parser.Parse(File.ReadAllText("code.c"));
 
-            for (var i = 0; i < tree.Childs.Count; i++)
+            for (var i = 0; i < tree.Children.Count; i++)
             {
-                var func = tree.Childs[i];
+                var func = tree.Children[i];
                 Console.Write(func["type"].Value + " " + func["name"].Value);
             }
         }
