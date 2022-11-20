@@ -3,10 +3,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Company>NiLProject</Company>
-    <Version>0.9.1</Version>
+    <Version>0.9.3</Version>
     <Description>Parser generator</Description>
-    <AssemblyVersion>0.9.1.13</AssemblyVersion>
-    <FileVersion>0.9.1.13</FileVersion>
+    <Revision>17</Revision>
+    <AssemblyVersion>$(Version).$(Revision)</AssemblyVersion>
+    <FileVersion>$(AssemblyVersion)</FileVersion>
     <PackageProjectUrl>https://github.com/nilproject/NiL.PG</PackageProjectUrl>
     <Copyright>NiLProject</Copyright>
     <RepositoryUrl>https://github.com/nilproject/NiL.PG</RepositoryUrl>

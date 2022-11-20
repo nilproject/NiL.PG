@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -9,11 +10,11 @@ namespace NiL.PG
     {
         private static string getToken(string text, ref int pos)
         {
-            if (pos == text.Length)
-                return "";
-
-            while (char.IsWhiteSpace(text[pos]))
+            while (pos < text.Length && char.IsWhiteSpace(text[pos]))
                 pos++;
+
+            if (pos >= text.Length)
+                return "";
 
             if (char.IsLetterOrDigit(text[pos]) || text[pos] == '_')
             {
@@ -69,21 +70,29 @@ namespace NiL.PG
             {
                 if (line >= input.Length)
                     return false;
+                
                 if (position >= input[line].Length)
                 {
                     position -= input[line].Length;
                     line++;
                     return true;
                 }
+
                 return false;
             };
 
             while (line < input.Length)
             {
                 while (lineFeed()) ;
+
                 if (line == input.Length)
                     break;
+
                 string token = getToken(input[line], ref position);
+
+                if (token is "")
+                    continue;
+
                 switch (token)
                 {
                     case "rule":
@@ -215,16 +224,23 @@ namespace NiL.PG
                                                 {
                                                     string rulname = "";
                                                     fragmentPosition++;
+
                                                     while ((trimcode[fragmentPosition] != ')') && (trimcode[fragmentPosition] != ','))
                                                         rulname += trimcode[fragmentPosition++];
+
                                                     if (!isValidName(rulname) || !(rules.ContainsKey(rulname) || fragments.ContainsKey(rulname)))
-                                                        throw new ArgumentException("Invalid element define \"" + rulname + "\"");
+                                                        throw new ArgumentException("Invalid element define \"" + rulname + "\" at line " + line);
+
                                                     if (rules.ContainsKey(rulname))
                                                         paramsRules.Add(rules[rulname]);
+
                                                     if (fragments.ContainsKey(rulname))
                                                         ffrags.Add(fragments[rulname]);
+
                                                     mrule = trimcode[fragmentPosition] == ',';
+
                                                     if (!mrule) fragmentPosition++;
+
                                                     break;
                                                 }
                                                 default:
@@ -239,15 +255,15 @@ namespace NiL.PG
 
                                         if ((paramsRules.Count != 0) && (ffrags.Count != 0))
                                         {
-                                            throw new ArgumentException("Field define can't contains rules and fragment together");
+                                            throw new ArgumentException("Field define can't contains rules and fragment together at line " + line);
                                         }
 
                                         if (ffrags.Count > 1)
-                                            throw new ArgumentException("Field define can't contain more than one fragment");
+                                            throw new ArgumentException("Field define can't contain more than one fragment at line " + line);
 
                                         if ((ffrags.Count == 0) && (paramsRules.Count == 0))
                                         {
-                                            throw new ArgumentException("Rule must be declared");
+                                            throw new ArgumentException("Rule must be declared at line " + line);
                                         }
 
                                         if (ffrags.Count != 0)
@@ -299,6 +315,7 @@ namespace NiL.PG
                     }
                 }
             }
+
             root = fragments["root"];
         }
 

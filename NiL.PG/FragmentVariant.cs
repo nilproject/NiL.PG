@@ -30,8 +30,7 @@ namespace NiL.PG
             {
                 FragmentTreeNode result = null;
                 int spos = pos;
-                int ruleIndex = 0;
-                int tokenLen = 0;
+                int instanceIndex = 0;
                 parsedLen = 0;
                 for (int i = 0; i < Elements.Count; i++)
                 {
@@ -43,7 +42,7 @@ namespace NiL.PG
                         return null;
                     }
 
-                    var parsedFragment = Elements[i].Parse(text, pos, out tokenLen);
+                    var parsedFragment = Elements[i].Parse(text, pos, out int tokenLen);
                     if (tokenLen > 0) parsedLen += tokenLen;
                     if (parsedFragment == null)
                     {
@@ -55,11 +54,11 @@ namespace NiL.PG
                         if (Elements[i].Repeated)
                         {
                             i--;
-                            parsedFragment.Name += ruleIndex.ToString();
-                            ruleIndex++;
+                            parsedFragment.Name += instanceIndex.ToString();
+                            instanceIndex++;
                         }
                         else
-                            ruleIndex = 0;
+                            instanceIndex = 0;
                     }
 
                     if (parsedFragment != null)
