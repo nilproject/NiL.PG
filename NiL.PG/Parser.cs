@@ -70,7 +70,7 @@ namespace NiL.PG
             {
                 if (line >= input.Length)
                     return false;
-                
+
                 if (position >= input[line].Length)
                 {
                     position -= input[line].Length;
@@ -321,16 +321,30 @@ namespace NiL.PG
 
         public TreeNode Parse(string text)
         {
-            int parsedLength = 0;
-            var t = root.Parse(text, 0, out parsedLength);
+            var t = root.Parse(text, 0, out int parsedLength);
 
-            if (t == null)
+            while (parsedLength < text.Length && char.IsWhiteSpace(text[parsedLength]))
+                parsedLength++;
+
+            if (parsedLength < text.Length)
             {
-                var src = text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-                int line = 0;
-                while (src[line].Length < parsedLength)
-                    parsedLength -= src[line++].Length;
-                line++;
+                int line = 1;
+                var lineStart = 0;
+
+                for (var i = 0; i < parsedLength; i++)
+                {
+                    if (text[i] == '\n')
+                    {
+                        line++;
+                        lineStart = i;
+                    }
+
+                    if (text[i] == '\r')
+                        lineStart = i;
+                }
+
+                parsedLength -= lineStart;
+
                 throw new ArgumentException("Syntax error at " + line + ":" + parsedLength);
             }
 

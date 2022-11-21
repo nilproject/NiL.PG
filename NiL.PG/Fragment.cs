@@ -20,16 +20,16 @@ namespace NiL.PG
                 return Name;
             }
 
-            public virtual TreeNode Parse(string text, int pos, out int parsedLen)
+            public virtual TreeNode Parse(string text, int pos, out int maxAchievedPosition)
             {
                 FragmentTreeNode res = null;
-                int tlen = 0;
-                parsedLen = 0;
+                maxAchievedPosition = pos;
                 for (int i = 0; (i < Variants.Count) && (res == null); i++)
                 {
-                    res = Variants[i].Parse(text, pos, out tlen);
-                    if (tlen > parsedLen)
-                        parsedLen = tlen;
+                    res = Variants[i].Parse(text, pos, out var tlen);
+                    if (tlen > maxAchievedPosition)
+                        maxAchievedPosition = tlen;
+
                     if (res != null)
                         res.VariantIndex = i;
                 }

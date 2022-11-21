@@ -11,9 +11,9 @@
                 return "*" + FieldName + "(" + Fragment.ToString() + ")" + (Repeated ? "*" : "");
             }
 
-            public override TreeNode Parse(string text, int pos, out int parsedLen)
+            public override TreeNode Parse(string text, int pos, out int maxAchievedPosition)
             {
-                var t = Fragment.Parse(text, pos, out parsedLen);
+                var t = Fragment.Parse(text, pos, out maxAchievedPosition);
                 if (t != null)
                     t.Name = FieldName;
                 return t;

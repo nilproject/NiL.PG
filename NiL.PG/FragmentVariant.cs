@@ -26,24 +26,28 @@ namespace NiL.PG
                 return res;
             }
 
-            public FragmentTreeNode Parse(string text, int pos, out int parsedLen)
+            public FragmentTreeNode Parse(string text, int position, out int maxAchievedPosition)
             {
                 FragmentTreeNode result = null;
-                int spos = pos;
+                int startPos = position;
                 int instanceIndex = 0;
-                parsedLen = 0;
+                maxAchievedPosition = position;
                 for (int i = 0; i < Elements.Count; i++)
                 {
-                    while ((text.Length > pos) && char.IsWhiteSpace(text[pos])) pos++;
-                    if (pos == text.Length)
+                    while ((text.Length > position) && char.IsWhiteSpace(text[position])) position++;
+                    if (position == text.Length)
                     {
                         if (Elements[i].Repeated)
                             break;
+
                         return null;
                     }
 
-                    var parsedFragment = Elements[i].Parse(text, pos, out int tokenLen);
-                    if (tokenLen > 0) parsedLen += tokenLen;
+                    var parsedFragment = Elements[i].Parse(text, position, out var maxPos);
+
+                    if (maxPos > maxAchievedPosition)
+                        maxAchievedPosition = maxPos;
+
                     if (parsedFragment == null)
                     {
                         if (!Elements[i].Repeated)
@@ -67,14 +71,14 @@ namespace NiL.PG
                             result = new FragmentTreeNode(FragmentName);
 
                         result.Children.Add(parsedFragment);
-                        pos += parsedFragment.Value.Length;
+                        position += parsedFragment.Value.Length;
                     }
                 }
 
                 if (result == null)
                     result = new FragmentTreeNode(FragmentName);
 
-                result.Value = text.Substring(spos, pos - spos);
+                result.Value = text.Substring(startPos, position - startPos);
                 return result;
             }
         }
