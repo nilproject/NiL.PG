@@ -1,0 +1,25 @@
+{
+  "name": "nil-pg-syntaxsupport",
+  "displayName": "NiL.PG.SyntaxSupport",
+  "description": "Support for NiL.PG syntax",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.103.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "npg",
+      "aliases": ["NiL.PG Syntax Definition", "npg"],
+      "extensions": [".npg"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "npg",
+      "scopeName": "source.npg",
+      "path": "./syntaxes/npg.tmLanguage.json"
+    }]
+  }
+}

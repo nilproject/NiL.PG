@@ -1,0 +1,115 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "NiL.PG Syntax Definition",
+	"patterns": [
+		{
+			"include": "#comment"
+		},
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#rule"
+		},
+		{
+			"include": "#fragment"
+		}
+	],
+	"repository": {
+		"comment": {
+			"patterns": [
+				{
+					"name": "comment.line",
+					"match": "//.*\\n"
+				},
+				{
+					"name": "comment.block",
+					"match": "/\\*.*\\*/"
+				}
+			]
+		},
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.root.npg",
+					"match": "(?!^fragment\\s+)root\\n"
+				}
+			]
+		},
+		"rule": {
+			"begin": "(^rule)\\s+(\\S+)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control"
+				},
+				"2": {
+					"name": "variable.name"
+				}
+			},
+			"while": "^\\s+",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"name": "string.regexp",
+					"match": "[^\\s\\]\\[\\()\\{}]+"
+				}
+			]
+		},
+		"fragment": {
+			"begin": "(^fragment)\\s+(?:(root)|(\\S*))",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control"
+				},
+				"2": {
+					"name": "keyword"
+				},
+				"3": {
+					"name": "entity.name.function"
+				}
+			},
+			"name": "string.other",
+			"while": "^\\s+",
+			"patterns": [
+				{
+					"name": "support.function",
+					"begin": "(\\*)([^(\\s]+)\\(",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.control"
+						},
+						"2": {
+							"name": "entity.name.tag"
+						}
+					},
+					"end": "\\)([*?]?)",
+					"endCaptures": {
+						"1": {
+							"name": "keyword.control"
+						}
+					},
+					"patterns": [
+						{
+							"match": "[\\w\\d]+",
+							"name": "variable.parameter"
+						}
+					]
+				},
+				{
+					"match": "(\\*)([^(\\s]+)",
+					"captures": {
+						"1": {
+							"name": "keyword.control"
+						},
+						"2": {
+							"name": "entity.name.tag"
+						}
+					}
+				}
+			]
+		}
+	},
+	"scopeName": "source.npg"
+}
