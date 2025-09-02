@@ -26,31 +26,29 @@ namespace NiL.PG
                 return res;
             }
 
-            public FragmentTreeNode Parse(string text, int position, out int maxAchievedPosition)
+            public FragmentTreeNode Parse(string text, int position, out int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode> processedFragments)
             {
                 FragmentTreeNode result = null;
-                int startPos = position;
                 int instanceIndex = 0;
                 maxAchievedPosition = position;
                 for (int i = 0; i < Elements.Count; i++)
                 {
-                    while ((text.Length > position) && char.IsWhiteSpace(text[position])) position++;
                     if (position == text.Length)
                     {
-                        if (Elements[i].Repeated)
+                        if (Elements[i].Repeated || Elements[i].Optional)
                             break;
 
                         return null;
                     }
 
-                    var parsedFragment = Elements[i].Parse(text, position, out var maxPos);
+                    var parsedFragment = Elements[i].Parse(text, position, out var maxPos, processedFragments);
 
                     if (maxPos > maxAchievedPosition)
                         maxAchievedPosition = maxPos;
 
                     if (parsedFragment == null)
                     {
-                        if (!Elements[i].Repeated)
+                        if (!Elements[i].Repeated && !Elements[i].Optional)
                             return null;
                     }
                     else
@@ -68,17 +66,20 @@ namespace NiL.PG
                     if (parsedFragment != null)
                     {
                         if (result == null)
-                            result = new FragmentTreeNode(FragmentName);
+                            result = new FragmentTreeNode(FragmentName)
+                            {
+                                Position = parsedFragment.Position,
+                            };
 
                         result.Children.Add(parsedFragment);
-                        position += parsedFragment.Value.Length;
+                        position = parsedFragment.Position + parsedFragment.Value.Length;
                     }
                 }
 
                 if (result == null)
                     result = new FragmentTreeNode(FragmentName);
 
-                result.Value = text.Substring(startPos, position - startPos);
+                result.Value = text.Substring(result.Position, position - result.Position);
                 return result;
             }
         }

@@ -3,7 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Company>NiLProject</Company>
-    <Version>0.9.3</Version>
+    <Version>0.9.4</Version>
+    <LangVersion>latest</LangVersion>
     <Description>Parser generator</Description>
     <Revision>17</Revision>
     <AssemblyVersion>$(Version).$(Revision)</AssemblyVersion>

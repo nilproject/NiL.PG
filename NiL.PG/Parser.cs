@@ -16,6 +16,8 @@ namespace NiL.PG
             if (pos >= text.Length)
                 return "";
 
+            pos = skipComment(text, pos, true);
+
             if (char.IsLetterOrDigit(text[pos]) || text[pos] == '_')
             {
                 int s = pos;
@@ -28,7 +30,7 @@ namespace NiL.PG
                     }
                 }
 
-                while (char.IsLetterOrDigit(text[pos + 1]) || text[pos + 1] == '_')
+                while (pos + 1 < text.Length && (char.IsLetterOrDigit(text[pos + 1]) || text[pos + 1] == '_'))
                 {
                     if (++pos >= text.Length - 1)
                     {
@@ -45,7 +47,7 @@ namespace NiL.PG
 
         private static bool isValidName(string name)
         {
-            if (!char.IsLetter(name[0]) && (name[0] != '_'))
+            if (string.IsNullOrWhiteSpace(name) || !char.IsLetter(name[0]) && (name[0] != '_'))
                 return false;
 
             for (int i = 1; i < name.Length; i++)
@@ -63,7 +65,7 @@ namespace NiL.PG
         {
             var rules = new Dictionary<string, Rule>();
             var fragments = new Dictionary<string, Fragment>();
-            string[] input = definition.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            var input = definition.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             int line = 0;
             int position = 0;
             Func<bool> lineFeed = () =>
@@ -71,9 +73,9 @@ namespace NiL.PG
                 if (line >= input.Length)
                     return false;
 
-                if (position >= input[line].Length)
+                if (string.IsNullOrWhiteSpace(input[line]) || position >= input[line].Length)
                 {
-                    position -= input[line].Length;
+                    position = 0;
                     line++;
                     return true;
                 }
@@ -112,14 +114,14 @@ namespace NiL.PG
                         Rule rule = new Rule();
                         rule.Name = token;
                         rules.Add(rule.Name, rule);
-                        line++;
                         string code = "";
-                        while (input[line].Trim() != "")
+                        while (!string.IsNullOrWhiteSpace(input[line + 1]))
                         {
-                            code += input[line].Trim();
                             line++;
+                            code += input[line].Trim();
                         }
-                        position = 0;
+
+                        position = int.MaxValue;
 
                         try
                         {
@@ -155,19 +157,20 @@ namespace NiL.PG
                         }
 
                         List<string> code = new List<string>();
-                        line++;
-                        while ((line < input.Length) && (input[line].Trim() != ""))
+                        while ((line + 1 < input.Length) && !string.IsNullOrWhiteSpace(input[line + 1]) && char.IsWhiteSpace(input[line + 1][0]))
                         {
-                            code.Add(input[line]);
                             line++;
+                            code.Add(input[line]);
                         }
 
-                        position = 0;
+                        position = int.MaxValue;
+
                         for (int i = 0; i < code.Count; i++)
                         {
                             var variant = new FragmentVariant(token, i);
                             fragment.Variants.Add(variant);
                             var trimcode = code[i].Trim();
+                            var absCodeLineIndex = line - code.Count + i + 2;
                             var prevPosition = 0;
                             var fragmentPosition = 0;
                             while (fragmentPosition < trimcode.Length)
@@ -186,20 +189,27 @@ namespace NiL.PG
                                     {
                                         string fname = getToken(trimcode, ref fragmentPosition);
                                         if (!isValidName(fname))
-                                            throw new ArgumentException("Invalid field name " + fname + " (" + (line - input.Length + i) + ", " + position + ")");
+                                            throw new ArgumentException("Invalid field name " + fname + " (" + absCodeLineIndex + ", " + fragmentPosition + ")");
 
                                         List<Rule> paramsRules = new List<Rule>();
                                         List<Fragment> ffrags = new List<Fragment>();
                                         bool work = true;
                                         bool mrule = false;
-                                        bool Repeated = false;
+                                        bool repeated = false;
+                                        bool optional = false;
                                         while (work)
                                         {
                                             switch (trimcode[fragmentPosition])
                                             {
+                                                case '?':
+                                                {
+                                                    optional = true;
+                                                    fragmentPosition++;
+                                                    break;
+                                                }
                                                 case '*':
                                                 {
-                                                    Repeated = true;
+                                                    repeated = true;
                                                     fragmentPosition++;
                                                     break;
                                                 }
@@ -228,8 +238,11 @@ namespace NiL.PG
                                                     while ((trimcode[fragmentPosition] != ')') && (trimcode[fragmentPosition] != ','))
                                                         rulname += trimcode[fragmentPosition++];
 
-                                                    if (!isValidName(rulname) || !(rules.ContainsKey(rulname) || fragments.ContainsKey(rulname)))
-                                                        throw new ArgumentException("Invalid element define \"" + rulname + "\" at line " + line);
+                                                    if (!isValidName(rulname))
+                                                        throw new ArgumentException("Invalid element definition \"" + rulname + "\" at line " + absCodeLineIndex);
+
+                                                    if (!(rules.ContainsKey(rulname) || fragments.ContainsKey(rulname)))
+                                                        throw new ArgumentException("Undefined element \"" + rulname + "\" at line " + absCodeLineIndex);
 
                                                     if (rules.ContainsKey(rulname))
                                                         paramsRules.Add(rules[rulname]);
@@ -255,31 +268,32 @@ namespace NiL.PG
 
                                         if ((paramsRules.Count != 0) && (ffrags.Count != 0))
                                         {
-                                            throw new ArgumentException("Field define can't contains rules and fragment together at line " + line);
+                                            throw new ArgumentException("Field define can't contains rules and fragment together at line " + absCodeLineIndex);
                                         }
 
                                         if (ffrags.Count > 1)
-                                            throw new ArgumentException("Field define can't contain more than one fragment at line " + line);
+                                            throw new ArgumentException("Field define can't contain more than one fragment at line " + absCodeLineIndex);
 
                                         if ((ffrags.Count == 0) && (paramsRules.Count == 0))
                                         {
-                                            throw new ArgumentException("Rule must be declared at line " + line);
+                                            throw new ArgumentException("Rule must be declared at line " + absCodeLineIndex);
                                         }
 
                                         if (ffrags.Count != 0)
                                         {
                                             variant.Elements.Add(new FragmentElement()
                                             {
-                                                Repeated = Repeated,
+                                                Repeated = repeated,
                                                 Fragment = ffrags[0],
-                                                FieldName = fname
+                                                FieldName = fname,
+                                                Optional = optional,
                                             });
                                         }
                                         else
                                         {
                                             var ruleElement = new RuleElement()
                                             {
-                                                Repeated = Repeated,
+                                                Repeated = repeated,
                                                 FieldName = fname
                                             };
                                             ruleElement.Rules.AddRange(paramsRules);
@@ -293,13 +307,13 @@ namespace NiL.PG
                                     {
                                         if (prevPosition == fragmentPosition - t.Length
                                             && variant.Elements.Count > 0
-                                            && variant.Elements[variant.Elements.Count - 1] is EqualElement equalElement)
+                                            && variant.Elements[variant.Elements.Count - 1] is ConstantElement equalElement)
                                         {
                                             equalElement.Value += t;
                                         }
                                         else
                                         {
-                                            var eq = new EqualElement() { Value = t };
+                                            var eq = new ConstantElement() { Value = t };
                                             variant.Elements.Add(eq);
                                         }
                                         break;
@@ -321,7 +335,7 @@ namespace NiL.PG
 
         public TreeNode Parse(string text)
         {
-            var t = root.Parse(text, 0, out int parsedLength);
+            var t = root.Parse(text, 0, out int parsedLength, []);
 
             while (parsedLength < text.Length && char.IsWhiteSpace(text[parsedLength]))
                 parsedLength++;

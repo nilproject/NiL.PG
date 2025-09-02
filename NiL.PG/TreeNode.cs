@@ -32,6 +32,7 @@ namespace NiL.PG
             public string Name { get; internal set; }
             public string Value { get; set; }
             public string FragmentName { get; internal set; }
+            public int Position { get; internal set; }
 
             public TreeNode(string fragmentName)
             {

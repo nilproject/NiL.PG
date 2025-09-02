@@ -11,7 +11,7 @@ namespace NiL.PG
 
             public RuleElement()
             {
-                Rules = new List<Rule>();
+                Rules = [];
             }
 
             public override string ToString()
@@ -23,19 +23,33 @@ namespace NiL.PG
                     if (i + 1 < Rules.Count)
                         r += ", ";
                 }
-                return "*" + FieldName + "(" + r + ")";
+                return "*" + FieldName + "(" + r + ")" + (Repeated ? "*" : "") + (Optional ? "?" : "");
             }
 
-            public override TreeNode Parse(string text, int pos, out int maxAchievedPosition)
+            public override TreeNode Parse(string text, int pos, out int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode> processedFragments)
             {
                 Match match = null;
                 var ruleName = "";
                 for (int i = 0; i < Rules.Count; i++)
                 {
                     match = Rules[i].RegExp.Match(text, pos);
-                    if (match.Index != pos || !match.Success)
+                    if (!match.Success)
                     {
                         match = null;
+                    }
+                    else if (match.Index > pos)
+                    {
+                        while (match.Index > pos && char.IsWhiteSpace(text[pos]))
+                            pos++;
+
+                        if (match.Index != pos)
+                        {
+                            match = null;
+                            break;
+                        }
+
+                        ruleName = Rules[i].Name;
+                        break;
                     }
                     else
                     {
@@ -46,10 +60,8 @@ namespace NiL.PG
 
                 maxAchievedPosition = pos;
 
-                if (match == null || !match.Success)
-                {
+                if (match is not { Success: true })
                     return null;
-                }
 
                 maxAchievedPosition += match.Length;
 
@@ -57,6 +69,7 @@ namespace NiL.PG
                 {
                     Name = FieldName,
                     Value = match.Value,
+                    Position = pos,
                 };
             }
         }

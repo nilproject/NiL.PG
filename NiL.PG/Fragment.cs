@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace NiL.PG
 {
@@ -12,7 +14,7 @@ namespace NiL.PG
             public Fragment(string name)
             {
                 Name = name;
-                Variants = new List<FragmentVariant>();
+                Variants = [];
             }
 
             public override string ToString()
@@ -20,13 +22,21 @@ namespace NiL.PG
                 return Name;
             }
 
-            public virtual TreeNode Parse(string text, int pos, out int maxAchievedPosition)
+            public virtual TreeNode Parse(string text, int position, out int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode> processedFragments)
             {
+                if (processedFragments.TryGetValue((this, position), out var existedResult))
+                {
+                    maxAchievedPosition = position + (existedResult?.Value.Length ?? 0);
+                    return existedResult;
+                }
+
+                processedFragments[(this, position)] = null;
+
                 FragmentTreeNode res = null;
-                maxAchievedPosition = pos;
+                maxAchievedPosition = position;
                 for (int i = 0; (i < Variants.Count) && (res == null); i++)
                 {
-                    res = Variants[i].Parse(text, pos, out var tlen);
+                    res = Variants[i].Parse(text, position, out var tlen, processedFragments);
                     if (tlen > maxAchievedPosition)
                         maxAchievedPosition = tlen;
 
@@ -37,6 +47,7 @@ namespace NiL.PG
                 if (res != null)
                     res.Name = Name;
 
+                processedFragments[(this, position)] = res;
                 return res;
             }
         }

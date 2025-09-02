@@ -1,4 +1,6 @@
-﻿namespace NiL.PG
+﻿using System.Collections.Generic;
+
+namespace NiL.PG
 {
     public partial class Parser
     {
@@ -8,12 +10,12 @@
 
             public override string ToString()
             {
-                return "*" + FieldName + "(" + Fragment.ToString() + ")" + (Repeated ? "*" : "");
+                return "*" + FieldName + "(" + Fragment.ToString() + ")" + (Repeated ? "*" : "") + (Optional ? "?" : "");
             }
 
-            public override TreeNode Parse(string text, int pos, out int maxAchievedPosition)
+            public override TreeNode Parse(string text, int position, out int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode> processedFragments)
             {
-                var t = Fragment.Parse(text, pos, out maxAchievedPosition);
+                var t = Fragment.Parse(text, position, out maxAchievedPosition, processedFragments);
                 if (t != null)
                     t.Name = FieldName;
                 return t;
