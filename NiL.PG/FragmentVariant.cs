@@ -26,9 +26,9 @@ namespace NiL.PG
                 return res;
             }
 
-            public FragmentTreeNode Parse(string text, int position, out int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode> processedFragments)
+            public FragmentTreeNode? Parse(string text, int position, out int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode?> processedFragments)
             {
-                FragmentTreeNode result = null;
+                FragmentTreeNode? result = null;
                 int instanceIndex = 0;
                 maxAchievedPosition = position;
                 for (int i = 0; i < Elements.Count; i++)
@@ -77,9 +77,11 @@ namespace NiL.PG
                 }
 
                 if (result == null)
-                    result = new FragmentTreeNode(FragmentName);
+                    return null;
 
-                result.Value = text.Substring(result.Position, position - result.Position);
+                result.Value = result.Children.Count == 1
+                    ? result.Children[0].Value
+                    : text.Substring(result.Position, position - result.Position);
                 return result;
             }
         }

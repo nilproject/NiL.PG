@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Company>NiLProject</Company>
     <Version>0.9.4</Version>
     <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
     <Description>Parser generator</Description>
     <Revision>17</Revision>
     <AssemblyVersion>$(Version).$(Revision)</AssemblyVersion>

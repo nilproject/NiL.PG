@@ -26,9 +26,9 @@ namespace NiL.PG
                 return "*" + FieldName + "(" + r + ")" + (Repeated ? "*" : "") + (Optional ? "?" : "");
             }
 
-            public override TreeNode Parse(string text, int pos, out int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode> processedFragments)
+            public override TreeNode? Parse(string text, int pos, out int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode> processedFragments)
             {
-                Match match = null;
+                Match? match = null;
                 var ruleName = "";
                 for (int i = 0; i < Rules.Count; i++)
                 {
@@ -39,15 +39,17 @@ namespace NiL.PG
                     }
                     else if (match.Index > pos)
                     {
-                        while (match.Index > pos && char.IsWhiteSpace(text[pos]))
-                            pos++;
+                        var checkPos = pos;
+                        while (match.Index > checkPos && char.IsWhiteSpace(text[checkPos]))
+                            checkPos++;
 
-                        if (match.Index != pos)
+                        if (match.Index != checkPos)
                         {
                             match = null;
-                            break;
+                            continue;
                         }
 
+                        pos = checkPos;
                         ruleName = Rules[i].Name;
                         break;
                     }

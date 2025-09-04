@@ -1,4 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace NiL.PG
 {
@@ -28,6 +33,8 @@ namespace NiL.PG
 
         public class TreeNode
         {
+            private static readonly char[] _splitChars = ['\\', '/'];
+
             public List<TreeNode> Children { get; private set; }
             public string Name { get; internal set; }
             public string Value { get; set; }
@@ -42,18 +49,26 @@ namespace NiL.PG
                 FragmentName = fragmentName;
             }
 
-            public TreeNode this[string name]
+            public TreeNode? this[string name]
             {
                 get
                 {
-                    string[] path = name.Split('\\');
+                    string[] path = name.Split(_splitChars);
                     TreeNode c = this;
                     for (int i = 0; i < path.Length; i++)
                     {
                         bool cont = false;
+                        var byFragmentName = false;
+                        var pathItem = path[i];
+                        if (pathItem.StartsWith("[") && pathItem.EndsWith("]"))
+                        {
+                            pathItem = pathItem[1..^1];
+                            byFragmentName = true;
+                        }
+
                         foreach (var n in c.Children)
                         {
-                            if (n.Name == path[i])
+                            if ((byFragmentName ? n.FragmentName : n.Name) == pathItem)
                             {
                                 c = n;
                                 cont = true;
@@ -68,6 +83,64 @@ namespace NiL.PG
 
                     return c;
                 }
+            }
+
+            public IEnumerable<TreeNode> Enumerate(string path, params string[]? alternativePaths)
+            {
+                static IEnumerable<TreeNode> enumerateWithPathPart(IEnumerable<TreeNode> nodes, string pathPart)
+                {
+                    var byFragmentName = false;
+                    var init = false;
+
+                    foreach (var nextNode in nodes)
+                    {
+                        if (!init)
+                        {
+                            if (pathPart.StartsWith("[") && pathPart.EndsWith("]"))
+                            {
+                                pathPart = pathPart[1..^1];
+                                byFragmentName = true;
+                            }
+
+                            init = true;
+                        }
+
+                        if (byFragmentName && nextNode.FragmentName == pathPart)
+                        {
+                            yield return nextNode;
+                        }
+                        else if (!byFragmentName && nextNode.Name == pathPart)
+                        {
+                            yield return nextNode;
+                            yield break;
+                        }
+                    }
+                }
+
+                var enumerator = Children as IEnumerable<TreeNode>;
+
+                var pathParts = path.Split(_splitChars);
+                for (int i = 0; i < pathParts.Length; i++)
+                    enumerator = enumerateWithPathPart(i > 0
+                        ? enumerator.SelectMany(x => x.Children)
+                        : enumerator, pathParts[i]);
+
+                if (alternativePaths?.Length > 0)
+                {
+                    for (var pi = 0; pi < alternativePaths.Length; pi++)
+                    {
+                        pathParts = alternativePaths[pi].Split(_splitChars);
+                        var nextEnumerator = Children as IEnumerable<TreeNode>;
+                        for (int i = 0; i < pathParts.Length; i++)
+                            nextEnumerator = enumerateWithPathPart(i > 0
+                                ? nextEnumerator.SelectMany(x => x.Children)
+                                : nextEnumerator, pathParts[i]);
+
+                        enumerator = enumerator.Concat(nextEnumerator);
+                    }
+                }
+
+                return enumerator;
             }
 
             public override string ToString()

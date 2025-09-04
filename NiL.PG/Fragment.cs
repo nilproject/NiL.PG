@@ -22,7 +22,7 @@ namespace NiL.PG
                 return Name;
             }
 
-            public virtual TreeNode Parse(string text, int position, out int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode> processedFragments)
+            public virtual TreeNode? Parse(string text, int position, out int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode?> processedFragments)
             {
                 if (processedFragments.TryGetValue((this, position), out var existedResult))
                 {
@@ -32,7 +32,7 @@ namespace NiL.PG
 
                 processedFragments[(this, position)] = null;
 
-                FragmentTreeNode res = null;
+                FragmentTreeNode? res = null;
                 maxAchievedPosition = position;
                 for (int i = 0; (i < Variants.Count) && (res == null); i++)
                 {

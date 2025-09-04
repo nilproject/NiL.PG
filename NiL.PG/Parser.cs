@@ -191,8 +191,8 @@ namespace NiL.PG
                                         if (!isValidName(fname))
                                             throw new ArgumentException("Invalid field name " + fname + " (" + absCodeLineIndex + ", " + fragmentPosition + ")");
 
-                                        List<Rule> paramsRules = new List<Rule>();
-                                        List<Fragment> ffrags = new List<Fragment>();
+                                        List<Rule>? paramsRules = null;
+                                        List<Fragment>? ffrags = null;
                                         bool work = true;
                                         bool mrule = false;
                                         bool repeated = false;
@@ -234,9 +234,12 @@ namespace NiL.PG
                                                 {
                                                     string rulname = "";
                                                     fragmentPosition++;
+                                                    var ruleNameStart = fragmentPosition;
 
                                                     while ((trimcode[fragmentPosition] != ')') && (trimcode[fragmentPosition] != ','))
-                                                        rulname += trimcode[fragmentPosition++];
+                                                        fragmentPosition++;
+
+                                                    rulname = trimcode[ruleNameStart..fragmentPosition];
 
                                                     if (!isValidName(rulname))
                                                         throw new ArgumentException("Invalid element definition \"" + rulname + "\" at line " + absCodeLineIndex);
@@ -245,10 +248,15 @@ namespace NiL.PG
                                                         throw new ArgumentException("Undefined element \"" + rulname + "\" at line " + absCodeLineIndex);
 
                                                     if (rules.ContainsKey(rulname))
-                                                        paramsRules.Add(rules[rulname]);
+                                                        (paramsRules ??= []).Add(rules[rulname]);
 
-                                                    if (fragments.ContainsKey(rulname))
-                                                        ffrags.Add(fragments[rulname]);
+                                                    if (fragments.TryGetValue(rulname, out var frag))
+                                                    {
+                                                        if (frag == fragment && variant.Elements.Count == 0)
+                                                            throw new InvalidOperationException("Immediate recursive call is not allowed");
+
+                                                        (ffrags ??= []).Add(frag);
+                                                    }
 
                                                     mrule = trimcode[fragmentPosition] == ',';
 
@@ -266,20 +274,16 @@ namespace NiL.PG
                                                 work = false;
                                         }
 
-                                        if ((paramsRules.Count != 0) && (ffrags.Count != 0))
-                                        {
+                                        if (paramsRules is not null && ffrags is not null)
                                             throw new ArgumentException("Field define can't contains rules and fragment together at line " + absCodeLineIndex);
-                                        }
 
-                                        if (ffrags.Count > 1)
+                                        if (ffrags is { Count: > 1 })
                                             throw new ArgumentException("Field define can't contain more than one fragment at line " + absCodeLineIndex);
 
-                                        if ((ffrags.Count == 0) && (paramsRules.Count == 0))
-                                        {
+                                        if ((ffrags is null) && (paramsRules is null))
                                             throw new ArgumentException("Rule must be declared at line " + absCodeLineIndex);
-                                        }
 
-                                        if (ffrags.Count != 0)
+                                        if (ffrags is not null)
                                         {
                                             variant.Elements.Add(new FragmentElement()
                                             {
@@ -294,11 +298,11 @@ namespace NiL.PG
                                             var ruleElement = new RuleElement()
                                             {
                                                 Repeated = repeated,
-                                                FieldName = fname
+                                                FieldName = fname,
+                                                Optional = optional,
                                             };
-                                            ruleElement.Rules.AddRange(paramsRules);
+                                            ruleElement.Rules.AddRange(paramsRules!);
                                             variant.Elements.Add(ruleElement);
-
                                         }
                                         break;
                                     }
@@ -313,7 +317,7 @@ namespace NiL.PG
                                         }
                                         else
                                         {
-                                            var eq = new ConstantElement() { Value = t };
+                                            var eq = new ConstantElement() { Value = t, FieldName = t };
                                             variant.Elements.Add(eq);
                                         }
                                         break;

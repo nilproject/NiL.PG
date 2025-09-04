@@ -10,9 +10,9 @@ namespace NiL.PG
 
             public bool Optional { get; set; }
 
-            public string FieldName { get; set; }
+            public required string FieldName { get; set; }
 
-            public abstract TreeNode Parse(string text, int position, out int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode> processedFragments);
+            public abstract TreeNode? Parse(string text, int position, out int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode> processedFragments);
         }
     }
 }
