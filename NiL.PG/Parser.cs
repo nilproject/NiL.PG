@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -16,7 +17,10 @@ namespace NiL.PG
             if (pos >= text.Length)
                 return "";
 
-            pos = skipComment(text, pos, true);
+            pos = skipComment(text, pos);
+
+            while ((pos < text.Length) && (char.IsWhiteSpace(text[pos])))
+                pos++;
 
             if (char.IsLetterOrDigit(text[pos]) || text[pos] == '_')
             {
@@ -337,14 +341,16 @@ namespace NiL.PG
             root = fragments["root"];
         }
 
-        public TreeNode Parse(string text)
+        public TreeNode[]? Parse(string text)
         {
-            var t = root.Parse(text, 0, out int parsedLength, []);
+            int parsedLength = 0;
+            var t = root.Parse(text, 0, ref parsedLength, []);
 
-            while (parsedLength < text.Length && char.IsWhiteSpace(text[parsedLength]))
-                parsedLength++;
+            var tailSpaces = 0;
+            while (parsedLength + tailSpaces < text.Length && char.IsWhiteSpace(text[parsedLength + tailSpaces]))
+                tailSpaces++;
 
-            if (parsedLength < text.Length)
+            if (parsedLength + tailSpaces < text.Length)
             {
                 int line = 1;
                 var lineStart = 0;
@@ -366,10 +372,10 @@ namespace NiL.PG
                 throw new ArgumentException("Syntax error at " + line + ":" + parsedLength);
             }
 
-            return t;
+            return t!.Where(x => x.Value.Length == parsedLength).ToArray();
         }
 
-        private static int skipComment(string code, int index, bool skipSpaces = false)
+        private static int skipComment(string code, int index)
         {
             bool work;
             do
@@ -407,12 +413,6 @@ namespace NiL.PG
                 }
             }
             while (work);
-
-            if (skipSpaces)
-            {
-                while ((index < code.Length) && (char.IsWhiteSpace(code[index])))
-                    index++;
-            }
 
             return index;
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace NiL.PG
 {
@@ -17,38 +18,42 @@ namespace NiL.PG
                 Variants = [];
             }
 
-            public override string ToString()
-            {
-                return Name;
-            }
+            public override string ToString() => Name;
 
-            public virtual TreeNode? Parse(string text, int position, out int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode?> processedFragments)
+            public virtual TreeNode[]? Parse(string text, int position, ref int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode[]?> processedFragments)
             {
                 if (processedFragments.TryGetValue((this, position), out var existedResult))
                 {
-                    maxAchievedPosition = position + (existedResult?.Value.Length ?? 0);
-                    return existedResult;
+                    var t = position + (existedResult?.Max(x => x.Value.Length) ?? 0);
+                    if (t > maxAchievedPosition)
+                        maxAchievedPosition = t;
+
+                    if (existedResult is null)
+                        return null;
+
+                    return [.. existedResult.Select(x => x.Clone() as TreeNode)!];
                 }
 
                 processedFragments[(this, position)] = null;
 
-                FragmentTreeNode? res = null;
-                maxAchievedPosition = position;
-                for (int i = 0; (i < Variants.Count) && (res == null); i++)
+                List<FragmentTreeNode>? res = null;
+                if (maxAchievedPosition < position)
+                    maxAchievedPosition = position;
+                for (int i = 0; i < Variants.Count; i++)
                 {
-                    res = Variants[i].Parse(text, position, out var tlen, processedFragments);
-                    if (tlen > maxAchievedPosition)
-                        maxAchievedPosition = tlen;
+                    var parsedSubVariants = Variants[i].Parse(text, position, ref maxAchievedPosition, processedFragments);
 
-                    if (res != null)
-                        res.VariantIndex = i;
+                    if (parsedSubVariants != null)
+                    {
+                        foreach (var variant in parsedSubVariants)
+                        {
+                            variant.VariantIndex = i;
+                            (res ??= []).Add(variant);
+                        }
+                    }
                 }
 
-                if (res != null)
-                    res.Name = Name;
-
-                processedFragments[(this, position)] = res;
-                return res;
+                return processedFragments[(this, position)] = res?.ToArray();
             }
         }
     }

@@ -10,9 +10,10 @@ namespace NiL.PG
 
             public override string ToString() => Value;
 
-            public override TreeNode Parse(string text, int position, out int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode> processedFragments)
+            public override TreeNode[]? Parse(string text, int position, ref int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode[]?> processedFragments)
             {
-                maxAchievedPosition = position;
+                if (maxAchievedPosition < position)
+                    maxAchievedPosition = position;
 
                 if (position + Value.Length > text.Length)
                     return null;
@@ -27,8 +28,10 @@ namespace NiL.PG
 
                 if (index == position)
                 {
-                    maxAchievedPosition = position + Value.Length;
-                    return new StrictEqualTreeNode(Value) { Value = Value, Position = position };
+                    if (maxAchievedPosition < position + Value.Length)
+                        maxAchievedPosition = position + Value.Length;
+
+                    return [new StrictEqualTreeNode(Value) { Value = Value, Position = position }];
                 }
 
                 return null;

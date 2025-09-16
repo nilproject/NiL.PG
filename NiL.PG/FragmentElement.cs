@@ -13,11 +13,17 @@ namespace NiL.PG
                 return "*" + FieldName + "(" + Fragment.ToString() + ")" + (Repeated ? "*" : "") + (Optional ? "?" : "");
             }
 
-            public override TreeNode Parse(string text, int position, out int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode> processedFragments)
+            public override TreeNode[]? Parse(string text, int position, ref int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode[]?> processedFragments)
             {
-                var t = Fragment.Parse(text, position, out maxAchievedPosition, processedFragments);
+                var t = Fragment.Parse(text, position, ref maxAchievedPosition, processedFragments);
                 if (t != null)
-                    t.Name = FieldName;
+                {
+                    foreach (var fragment in t)
+                    {
+                        fragment.Name = FieldName;
+                    }
+                }
+
                 return t;
             }
         }

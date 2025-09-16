@@ -26,7 +26,7 @@ namespace NiL.PG
                 return "*" + FieldName + "(" + r + ")" + (Repeated ? "*" : "") + (Optional ? "?" : "");
             }
 
-            public override TreeNode? Parse(string text, int pos, out int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode> processedFragments)
+            public override TreeNode[]? Parse(string text, int pos, ref int maxAchievedPosition, Dictionary<(Fragment Fragment, int Position), TreeNode[]?> processedFragments)
             {
                 Match? match = null;
                 var ruleName = "";
@@ -67,12 +67,12 @@ namespace NiL.PG
 
                 maxAchievedPosition += match.Length;
 
-                return new TreeNode(ruleName)
+                return [new TreeNode(ruleName)
                 {
                     Name = FieldName,
                     Value = match.Value,
                     Position = pos,
-                };
+                }];
             }
         }
     }

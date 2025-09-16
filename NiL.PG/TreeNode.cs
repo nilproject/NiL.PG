@@ -24,26 +24,24 @@ namespace NiL.PG
 
         public sealed class FragmentTreeNode : TreeNode
         {
-            public int VariantIndex { get; internal set; }
-
             public FragmentTreeNode(string fragmentName) : base(fragmentName)
             {
             }
         }
 
-        public class TreeNode
+        public class TreeNode : ICloneable
         {
             private static readonly char[] _splitChars = ['\\', '/'];
-
-            public List<TreeNode> Children { get; private set; }
+            public TreeNode[] Children { get; internal set; } = [];
             public string Name { get; internal set; }
             public string Value { get; set; }
             public string FragmentName { get; internal set; }
             public int Position { get; internal set; }
+            public int VariantIndex { get; internal set; }
+            public TreeNode[]? AlternativeInterpretations { get; internal set; }
 
             public TreeNode(string fragmentName)
             {
-                Children = new List<TreeNode>();
                 Value = "";
                 Name = "";
                 FragmentName = fragmentName;
@@ -143,10 +141,9 @@ namespace NiL.PG
                 return enumerator;
             }
 
-            public override string ToString()
-            {
-                return Name + ": " + Value;
-            }
+            public override string ToString() => Name + ": " + Value;
+
+            public object Clone() => MemberwiseClone();
         }
     }
 }
