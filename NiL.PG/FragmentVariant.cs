@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Xml.Linq;
 
 namespace NiL.PG
 {
@@ -90,6 +92,18 @@ namespace NiL.PG
                             ref parseVariantLeafs,
                             text,
                             parsedFragment[i].Position + parsedFragment[i].Value.Length,
+                            ref maxAchievedPosition,
+                            processedFragments);
+                    }
+
+                    if (Elements[elementIndex].Optional)
+                    {
+                        parse(
+                            parentNode,
+                            elementIndex + 1,
+                            ref parseVariantLeafs,
+                            text,
+                            position,
                             ref maxAchievedPosition,
                             processedFragments);
                     }
