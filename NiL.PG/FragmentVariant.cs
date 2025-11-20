@@ -163,7 +163,7 @@ namespace NiL.PG
                         {
                             var keys = new int[result.Length];
                             for (var i = 0; i < result.Length; i++)
-                                keys[i] = result[i].Value.Length;
+                                keys[i] = result[i].VariantIndex;
 
                             Array.Sort(keys, result);
                             List<FragmentTreeNode>? buffer = null;
